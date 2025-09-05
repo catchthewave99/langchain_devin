@@ -104,10 +104,9 @@ def create_base_retry_decorator(
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
                         task = loop.create_task(coro)
-                        def _handle_task_error(task):
+                        def _handle_task_error(task: asyncio.Task[Any]) -> None:
                             if task.exception():
                                 _log_error_once(f"on_retry error: {task.exception()}")
-                        
                         task.add_done_callback(_handle_task_error)
                     else:
                         asyncio.run(coro)
