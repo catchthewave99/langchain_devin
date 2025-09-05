@@ -94,7 +94,7 @@ def beta(
 
         warned = False
 
-        def warning_emitting_wrapper(*args: Any, **kwargs: Any) -> Any:
+        def warning_emitting_wrapper(*args: object, **kwargs: object) -> object:
             """Wrapper for the original wrapped callable that emits a warning.
 
             Args:
@@ -110,7 +110,7 @@ def beta(
                 emit_warning()
             return wrapped(*args, **kwargs)
 
-        async def awarning_emitting_wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def awarning_emitting_wrapper(*args: object, **kwargs: object) -> object:
             """Same as warning_emitting_wrapper, but for async functions."""
             nonlocal warned
             if not warned and not is_caller_internal():
@@ -132,8 +132,8 @@ def beta(
                     obj.__doc__ = new_doc
 
                 def warn_if_direct_instance(
-                    self: Any, *args: Any, **kwargs: Any
-                ) -> Any:
+                    self: object, *args: object, **kwargs: object
+                ) -> object:
                     """Warn that the class is in beta."""
                     nonlocal warned
                     if not warned and type(self) is obj and not is_caller_internal():
@@ -170,18 +170,18 @@ def beta(
                     self.__doc__ = doc
 
                 def __get__(
-                    self, instance: Any, owner: Union[type, None] = None
-                ) -> Any:
+                    self, instance: object, owner: Union[type, None] = None
+                ) -> object:
                     if instance is not None or owner is not None:
                         emit_warning()
                     return self.fget(instance)
 
-                def __set__(self, instance: Any, value: Any) -> None:
+                def __set__(self, instance: object, value: object) -> None:
                     if instance is not None:
                         emit_warning()
                     return self.fset(instance, value)
 
-                def __delete__(self, instance: Any) -> None:
+                def __delete__(self, instance: object) -> None:
                     if instance is not None:
                         emit_warning()
                     return self.fdel(instance)
@@ -191,7 +191,7 @@ def beta(
                     if _name == "<lambda>":
                         _name = set_name
 
-            def finalize(wrapper: Callable[..., Any], new_doc: str) -> Any:  # noqa: ARG001
+            def finalize(wrapper: Callable[..., object], new_doc: str) -> object:  # noqa: ARG001
                 """Finalize the property."""
                 return _BetaProperty(
                     fget=obj.fget, fset=obj.fset, fdel=obj.fdel, doc=new_doc
