@@ -131,12 +131,12 @@ class BaseMessage(Serializable):
         title = get_msg_title_repr(self.type.title() + " Message", bold=html)
         if self.name is not None:
             title += f"\nName: {self.name}"
-        
+
         if isinstance(self.content, str):
             content_repr = self.content
         else:
             content_repr = str(self.content)
-        
+
         return f"{title}\n\n{content_repr}"
 
     def pretty_print(self) -> None:
