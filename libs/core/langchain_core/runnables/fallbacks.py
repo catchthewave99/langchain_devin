@@ -71,7 +71,7 @@ class RunnableWithFallbacks(RunnableSerializable[Input, Output]):
             from langchain_core.output_parser import StrOutputParser
             from langchain_core.runnables import RunnableLambda
 
-            def when_all_is_lost(inputs):
+            def when_all_is_lost(inputs) -> str:
                 return ("Looks like our LLM providers are down. "
                         "Here's a nice 🦜️ emoji for you instead.")
 
