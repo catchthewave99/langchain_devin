@@ -103,9 +103,11 @@ def create_base_retry_decorator(
                 try:
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
-                        # TODO: Fix RUF006 - this task should have a reference
-                        #  and be awaited somewhere
-                        loop.create_task(coro)  # noqa: RUF006
+                        task = loop.create_task(coro)
+                        task.add_done_callback(
+                            lambda t: _log_error_once(f"Error in on_retry task: {t.exception()}")
+                            if t.exception() else None
+                        )
                     else:
                         asyncio.run(coro)
                 except Exception as e:
