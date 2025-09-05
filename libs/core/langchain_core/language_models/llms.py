@@ -1539,7 +1539,6 @@ class LLM(BaseLLM):
         **kwargs: Any,
     ) -> LLMResult:
         """Run the LLM on the given prompt and input."""
-        # TODO: add caching here.
         generations = []
         new_arg_supported = inspect.signature(self._call).parameters.get("run_manager")
         for prompt in prompts:
