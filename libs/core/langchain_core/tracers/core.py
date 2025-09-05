@@ -105,7 +105,7 @@ class _TracerCore(ABC):
             else:
                 tb = traceback.format_exception(error)
             return (msg + "\n\n".join(tb)).strip()
-        except:  # noqa: E722
+        except Exception:
             return msg
 
     def _start_trace(self, run: Run) -> Union[None, Coroutine[Any, Any, None]]:  # type: ignore[return]
