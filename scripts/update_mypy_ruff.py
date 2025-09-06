@@ -17,8 +17,12 @@ def main():
         if "libs/cli/" in path:
             continue
         print(path)
-        with open(path, "rb") as f:
-            pyproject = tomllib.load(f)
+        try:
+            with open(path, "rb") as f:
+                pyproject = tomllib.load(f)
+        except (FileNotFoundError, IOError, OSError, tomllib.TOMLDecodeError) as e:
+            print(f"Warning: Could not read {path}: {e}")
+            continue
         try:
             pyproject["tool"]["poetry"]["group"]["typing"]["dependencies"]["mypy"] = (
                 "^1.10"
@@ -28,25 +32,71 @@ def main():
             )
         except KeyError:
             continue
-        with open(path, "w") as f:
-            toml.dump(pyproject, f)
+        try:
+            with open(path, "w") as f:
+                toml.dump(pyproject, f)
+        except (IOError, OSError) as e:
+            print(f"Error: Could not write to {path}: {e}")
+            continue
         cwd = "/".join(path.split("/")[:-1])
 
-        subprocess.run(
-            "poetry lock --no-update; poetry install --with lint; poetry run ruff format .; poetry run ruff --fix .",
-            cwd=cwd,
-            shell=True,
-            capture_output=True,
-            text=True,
-        )
+        try:
+            subprocess.run(
+                ["poetry", "lock", "--no-update"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["poetry", "install", "--with", "lint"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["poetry", "run", "ruff", "format", "."],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["poetry", "run", "ruff", "--fix", "."],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"Error running poetry/ruff commands in {cwd}: {e}")
+            continue
 
-        completed = subprocess.run(
-            "poetry lock --no-update; poetry install --with lint, typing; poetry run mypy . --no-color",
-            cwd=cwd,
-            shell=True,
-            capture_output=True,
-            text=True,
-        )
+        try:
+            subprocess.run(
+                ["poetry", "lock", "--no-update"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["poetry", "install", "--with", "lint", "typing"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            completed = subprocess.run(
+                ["poetry", "run", "mypy", ".", "--no-color"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"Error running poetry commands in {cwd}: {e}")
+            continue
         logs = completed.stdout.split("\n")
 
         to_ignore = {}
@@ -65,21 +115,51 @@ def main():
             try:
                 with open(full_path, "r") as f:
                     file_lines = f.readlines()
-            except FileNotFoundError:
+            except (FileNotFoundError, IOError, OSError) as e:
+                print(f"Warning: Could not read file {full_path}: {e}")
                 continue
             file_lines[int(line_no) - 1] = (
                 file_lines[int(line_no) - 1][:-1] + f"  # type: ignore[{all_errors}]\n"
             )
-            with open(full_path, "w") as f:
-                f.write("".join(file_lines))
+            try:
+                with open(full_path, "w") as f:
+                    f.write("".join(file_lines))
+            except (IOError, OSError) as e:
+                print(f"Error: Could not write to {full_path}: {e}")
+                continue
 
-        subprocess.run(
-            "poetry lock --no-update; poetry install --with lint; poetry run ruff format .; poetry run ruff --fix .",
-            cwd=cwd,
-            shell=True,
-            capture_output=True,
-            text=True,
-        )
+        try:
+            subprocess.run(
+                ["poetry", "lock", "--no-update"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["poetry", "install", "--with", "lint"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["poetry", "run", "ruff", "format", "."],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["poetry", "run", "ruff", "--fix", "."],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"Error running poetry/ruff commands in {cwd}: {e}")
+            continue
 
 
 if __name__ == "__main__":

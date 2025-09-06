@@ -409,7 +409,7 @@ class PrefixContext:
 
     prefix: str = ""
 
-    def __init__(self, prefix: str = ""):
+    def __init__(self, prefix: str = "") -> None:
         """Create a prefix context.
 
         Args:

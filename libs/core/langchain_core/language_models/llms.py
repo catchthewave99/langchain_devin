@@ -103,9 +103,11 @@ def create_base_retry_decorator(
                 try:
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
-                        # TODO: Fix RUF006 - this task should have a reference
-                        #  and be awaited somewhere
-                        loop.create_task(coro)  # noqa: RUF006
+                        task = loop.create_task(coro)
+                        def _handle_task_error(task: asyncio.Task[Any]) -> None:
+                            if task.exception():
+                                _log_error_once(f"on_retry error: {task.exception()}")
+                        task.add_done_callback(_handle_task_error)
                     else:
                         asyncio.run(coro)
                 except Exception as e:
@@ -1537,7 +1539,6 @@ class LLM(BaseLLM):
         **kwargs: Any,
     ) -> LLMResult:
         """Run the LLM on the given prompt and input."""
-        # TODO: add caching here.
         generations = []
         new_arg_supported = inspect.signature(self._call).parameters.get("run_manager")
         for prompt in prompts:
