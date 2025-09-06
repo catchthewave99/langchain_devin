@@ -21,24 +21,49 @@ def main(*args):
         if pkg in path:
             break
 
-    with open(path, "rb") as f:
-        pyproject = tomllib.load(f)
+    try:
+        with open(path, "rb") as f:
+            pyproject = tomllib.load(f)
+    except (FileNotFoundError, IOError, OSError, tomllib.TOMLDecodeError) as e:
+        print(f"Error: Could not read pyproject.toml from {path}: {e}")
+        return
     major, minor, patch = pyproject["tool"]["poetry"]["version"].split(".")
     patch = str(int(patch) + 1)
     bumped = ".".join((major, minor, patch))
     pyproject["tool"]["poetry"]["version"] = bumped
-    with open(path, "w") as f:
-        toml.dump(pyproject, f)
+    try:
+        with open(path, "w") as f:
+            toml.dump(pyproject, f)
+    except (IOError, OSError) as e:
+        print(f"Error: Could not write to {path}: {e}")
+        return
 
     branch = f"{user}/{pkg}_{bumped.replace('.', '_')}"
-    print(
+    try:
         subprocess.run(
-            f"git checkout -b {branch}; git commit -am '{pkg}[patch]: Release {bumped}'; git push -u origin {branch}",
-            shell=True,
+            ["git", "checkout", "-b", branch],
             capture_output=True,
             text=True,
+            check=True,
         )
-    )
+        subprocess.run(
+            ["git", "commit", "-am", f"{pkg}[patch]: Release {bumped}"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        result = subprocess.run(
+            ["git", "push", "-u", "origin", branch],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        print(result)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running git commands: {e}")
+        if e.stderr:
+            print(f"Git error output: {e.stderr}")
+        return
 
 
 if __name__ == "__main__":
