@@ -147,7 +147,7 @@ class AgentFinish(Serializable):
     """
     type: Literal["AgentFinish"] = "AgentFinish"
 
-    def __init__(self, return_values: dict, log: str, **kwargs: Any):
+    def __init__(self, return_values: dict, log: str, **kwargs: Any) -> None:
         """Override init to support instantiation by position for backward compat."""
         super().__init__(return_values=return_values, log=log, **kwargs)
 

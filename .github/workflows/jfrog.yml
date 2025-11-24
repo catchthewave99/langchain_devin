@@ -22,12 +22,15 @@ jobs:
          run: jf npm-config --global=true --repo-resolve=wavecatcher-npm --repo-deploy=wavecatcher-npm
            
        - name: Install Deps
+         working-directory: docs
          run: jf npm install
            
        - name: Run tests
+         working-directory: docs
          run: npm test
          
        - name: Publish
+         working-directory: docs
          run: jf npm publish
          
        - name: Publish Build info With JFrog CLI
